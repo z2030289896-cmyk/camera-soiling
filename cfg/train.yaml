@@ -1,0 +1,35 @@
+# 训练参数配置
+epochs: 100
+batch_size: 32
+learning_rate: 0.0001
+weight_decay: 0.0001
+device: "cuda"
+seed: 42
+
+# 消融实验矩阵（从 config 中读 experiment 名自动命名归档目录）
+# A_SmoothL1+BCE     : 仅 tile loss，无 coverage / smooth / HN / FP
+# B_SmoothL1+BCE+TV  : tile + TV 空间平滑
+# C_SmoothL1+BCE+Cov  : tile + coverage 回归
+# D_All              : 全部开启 (tile + cov + TV + HN + FP)
+experiment: "A_SmoothL1+BCE"
+
+use_amp: true
+
+# 损失权重（消融实验确认：纯 tile loss 效果最佳）
+loss:
+  tile_weight: 1.0        # SmoothL1Loss tile 连续回归
+  bce_weight: 0.3          # BCEWithLogitsLoss 防误识别
+  coverage_weight: 0.0     # 关闭
+  smooth_weight: 0.0       # 关闭
+  hard_neg_weight: 0.0     # 关闭
+  fp_penalty_weight: 0.0   # 关闭
+
+# 日志 & 保存
+log_interval: 20
+val_interval: 1
+save_interval: 25
+
+# 输出路径
+checkpoint_dir: "outputs/checkpoint"
+heatmap_dir: "outputs/heatmap"
+log_dir: "outputs/logs"

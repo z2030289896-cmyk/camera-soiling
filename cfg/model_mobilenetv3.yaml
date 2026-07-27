@@ -1,0 +1,49 @@
+# ============================================================
+# TiledSoilingNet 模型结构配置 (MobileNetV3-Small 轻量版)
+# 参数量 ~0.6M，适合边缘设备部署
+# ============================================================
+
+# --- Parameters ---
+grid_size: 8
+
+# --- Backbone: MobileNetV3-Small (截断到 14×14) ---
+# 输入: (B, 3, 224, 224)
+# IR = InvertedResidual, SE = Squeeze-and-Excitation
+backbone:
+  name: "mobilenetv3"       # torchvision 模型名
+  pretrained: true          # 加载 ImageNet 预训练权重
+  out_channels: 48          # features[:9] = 48ch
+  out_spatial: [14, 14]
+
+  # 逐层结构 (YOLO格式, 仅文档参考)
+  layers:
+    # stem: (B,16,56,56)
+    - [-1, 1, Conv_BN_ReLU, [3, 16, 3, 2, 1]]
+    # stage 1: (B,16,56,56)
+    - [-1, 1, InvertedResidual_SE, [16, 16, 2, 1]]
+    # stage 2: (B,24,28,28)
+    - [-1, 1, InvertedResidual, [16, 24, 2, 4]]
+    - [-1, 1, InvertedResidual, [24, 24, 1, 4]]
+    # stage 3: (B,48,14,14) ← 截断点
+    - [-1, 1, InvertedResidual_SE, [24, 40, 2, 4]]
+    - [-1, 1, InvertedResidual_SE, [40, 40, 1, 4]]
+    - [-1, 1, InvertedResidual_SE, [40, 40, 1, 4]]
+    - [-1, 1, InvertedResidual_SE, [40, 48, 1, 4]]
+    - [-1, 1, InvertedResidual_SE, [48, 48, 1, 4]]
+
+# --- Head: TileHead ---
+# 输入: (B, 48, 14, 14)
+tile_head:
+  in_channels: 48
+  grid_size: 8
+
+  layers:
+    - [-1, 1, Conv_BN_ReLU, [48, 128, 3, 1, 1]]
+    - [-1, 1, Conv_BN_ReLU, [128, 64, 3, 1, 1]]
+    - [-1, 1, AdaptiveAvgPool2d, [64, 8, 8]]
+    - [-1, 1, Conv2d, [64, 1, 1, 1, 0]]
+
+# --- 输出 ---
+# tile_logits: (B, 8, 8)
+# tile_prob:   (B, 8, 8)
+# coverage:    (B,)

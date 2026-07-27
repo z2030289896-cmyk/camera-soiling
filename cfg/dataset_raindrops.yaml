@@ -1,0 +1,16 @@
+# RaindropsOnWindshield 数据集配置
+# 二值 mask: 白色(255,255,255)=雨滴/脏污, 黑色(0,0,0)=背景
+# D3/D4 场景为空，自动跳过
+
+train_image: "data/RaindropsOnWindshield/images"
+train_mask: "data/RaindropsOnWindshield/masks"
+val_image: "data/RaindropsOnWindshield/images"
+val_mask: "data/RaindropsOnWindshield/masks"
+
+img_size: 224
+grid_size: 8
+tile_threshold: 0.1
+train_split: 0.8
+num_workers: 4
+batch_size: 32
+seed: 42

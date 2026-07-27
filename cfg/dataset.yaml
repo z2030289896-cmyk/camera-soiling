@@ -1,0 +1,23 @@
+# 数据集配置
+# 路径（相对于项目根目录）
+train_image: "data/woodscape/rgbImages"
+train_mask: "data/woodscape/gtLabels"
+val_image: "data/woodscape/rgbImages"
+val_mask: "data/woodscape/gtLabels"
+
+# 图像参数
+img_size: 224           # 输入尺寸
+grid_size: 8            # tile 网格 (8x8 = 64 tiles)
+tile_threshold: 0.1      # tile 标签二值化阈值
+
+# 标签映射: gtLabels 原始值 -> 脏污二元标签
+# 0=背景 -> ignore, 1=干净 -> 0, 2=透明脏污 -> 1, 3=不透明脏污 -> 1
+label_remap:
+  0: -1    # ignore
+  1: 0     # 干净
+  2: 1     # 脏污
+  3: 1     # 脏污
+
+# 数据集划分
+train_split: 0.8         # 训练集比例
+num_workers: 4

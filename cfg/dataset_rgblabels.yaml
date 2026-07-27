@@ -1,0 +1,38 @@
+# ============================================================
+# 数据集配置 (rgbLabels 版本)
+# ============================================================
+# 使用 rgbLabels 的 RGB 彩色标签，自动检测颜色→类别映射。
+# 标签为二元 (dirty/clean)，非多分类。
+#
+# 标签生成流程:
+#   rgbLabels (RGB彩色图)
+#       │
+#       ▼ 自动颜色检测
+#   color_map: 黑→bg(忽略), 绿→clean(0), 红/蓝→dirty(1)
+#       │
+#       ▼ 转化为二元 mask
+#   binary_mask: 0=干净, 1=脏污 (透明+不透明统一为脏污)
+#       │
+#       ▼ 污染类型加权 (pixel_weight)
+#   不透明脏污(泥): 权重 1.0  |  透明脏污(水滴): 权重 0.5
+#       │
+#       ▼ mask_to_tile_label (高斯中心加权 + gamma增强 + 边界平滑)
+#   tile_label: (8,8) 连续值 [0,1]
+#
+# 与 gtLabels 版的区别:
+#   - gtLabels: 灰度标签，手动映射 0→bg,1→clean,2→transparent,3→opaque
+#   - rgbLabels: RGB标签，自动检测颜色，透明/不透明统一为dirty但加权不同
+# ============================================================
+
+train_image: "data/woodscape/rgbImages"
+train_mask: "data/woodscape/rgbLabels"   # RGB 彩色标签 → 自动检测→二元mask
+val_image: "data/woodscape/rgbImages"
+val_mask: "data/woodscape/rgbLabels"
+
+img_size: 224
+grid_size: 8
+tile_threshold: 0.1
+train_split: 0.8
+num_workers: 4
+batch_size: 32
+seed: 42

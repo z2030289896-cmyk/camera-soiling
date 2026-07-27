@@ -1,0 +1,16 @@
+# Self 数据集配置
+# images/ = RGB 原图, mask/ = 多边形标注
+# mask: 红色(255,0,0)→脏污, 黑色(0,0,0)→背景
+# 40 张图片，80/20 划分 → 32 train / 8 val
+train_image: "data/self/self1/images"
+train_mask: "data/self/self1/mask"
+
+experiment: "Self1_finetuned"
+
+img_size: 224
+grid_size: 8
+tile_threshold: 0.1
+train_split: 1.0        # 全部用作训练，不划分验证集
+num_workers: 2
+batch_size: 8
+seed: 42
