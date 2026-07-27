@@ -1,8 +1,15 @@
-torch>=2.0.0
-torchvision>=0.15.0
-numpy>=1.24.0
-Pillow>=9.0.0
-opencv-python>=4.8.0
-PyYAML>=6.0
-onnx>=1.14.0
-tqdm>=4.65.0
+# ============================================================
+# Camera Soiling Detection — 环境依赖
+# ============================================================
+# 安装: pip install -r requirements.txt
+
+# --- 核心依赖（必备）---
+torch>=2.0.0              # 深度学习框架（GPU/CPU训练）
+torchvision>=0.15.0        # 预训练模型权重、图像变换
+numpy>=1.24.0              # 数值计算
+Pillow>=9.0.0              # 图像加载/处理（PNG/JPG）
+PyYAML>=6.0                # 配置文件解析
+
+# --- 可选依赖 ---
+onnx>=1.14.0               # ONNX模型导出（仅 export_onnx.py 需要）
+opencv-python>=4.8.0       # 图像处理（仅 convert_labelme_to_mask.py 需要）
