@@ -9,46 +9,28 @@ import torch.nn.functional as F
 
 
 class TotalLoss:
-    """混合损失函数，支持 6 种可独立开关的 loss 组件。
+    """连续回归 + 分类 混合损失函数。
 
-    组件:
-        1. SmoothL1Loss    — 连续回归到 GT 标签 [0,1]，处理中间置信度
-        2. BCEWithLogitsLoss — 推向 0/1 极端，防止干净 tile 上维持中间值
-        3. Hard Negative Mining — GT≈0 但 Pred 偏高的 tile 加倍惩罚
-        4. False Positive Penalty — 显式 L2 惩罚干净 tile 上的非零预测
-        5. Coverage MSE — 全局覆盖率监督（默认关闭）
-        6. TV Smooth — 空间平滑，鼓励相邻 tile 一致（默认关闭）
+    核心组件 (默认开启):
+        SmoothL1Loss — 连续回归到 GT 标签 [0,1]
+        BCEWithLogitsLoss — 推向 0/1 极端，防误检
 
-    默认配置（消融实验 A，效果最优）：
-        TotalLoss(tile_weight=1.0, bce_weight=0.3,
-                  coverage_weight=0.0, smooth_weight=0.0,
-                  hard_neg_weight=0.0, fp_penalty_weight=0.0)
+    可选组件 (默认关闭，通过参数开启):
+        Hard Negative Mining / FP Penalty / Coverage MSE / TV Smooth
+
+    最优配置 (消融实验确认):
+        TotalLoss(tile_weight=1.0, bce_weight=0.3)
     """
 
     def __init__(self,
                  tile_weight: float = 1.0,       # SmoothL1Loss 权重
                  bce_weight: float = 0.3,          # BCEWithLogitsLoss 权重
-                 coverage_weight: float = 0.1,     # Coverage MSE 权重 (默认关闭)
-                 smooth_weight: float = 0.01,      # TV 平滑权重 (默认关闭)
-                 hard_neg_weight: float = 2.0,     # Hard Negative 额外倍数
-                 fp_penalty_weight: float = 0.5,   # FP 惩罚权重
-                 hard_neg_threshold: float = 0.7,  # Hard Neg 判定阈值 (Pred>此值)
-                 fp_threshold: float = 0.05):      # FP 判定阈值 (GT<此值)
-        """
-        Args:
-            tile_weight: SmoothL1Loss 权重
-            bce_weight: BCEWithLogitsLoss 权重 (0=纯回归, >0=加分类推力)
-            coverage_weight: Coverage MSE 权重 (0=关闭)
-            smooth_weight: TV 平滑权重 (0=关闭)
-            hard_neg_weight: Hard Negative 额外权重倍数 (1=不额外惩罚)
-            fp_penalty_weight: FP 显式惩罚权重 (0=关闭)
-            hard_neg_threshold: 判定 Hard Negative 的 Pred 下限
-            fp_threshold: 判定干净 tile 的 GT 上限
-        """
+                 hard_neg_weight: float = 0.0,     # Hard Negative (默认关闭)
+                 fp_penalty_weight: float = 0.0,   # FP 惩罚 (默认关闭)
+                 hard_neg_threshold: float = 0.7,  # Hard Neg 判定阈值
+                 fp_threshold: float = 0.05):      # FP 判定阈值
         self.tile_weight = tile_weight
         self.bce_weight = bce_weight
-        self.coverage_weight = coverage_weight
-        self.smooth_weight = smooth_weight
         self.hard_neg_weight = hard_neg_weight
         self.fp_penalty_weight = fp_penalty_weight
         self.hard_neg_threshold = hard_neg_threshold
@@ -75,8 +57,6 @@ class TotalLoss:
         tile_prob = outputs["tile_prob"]              # (B, G, G) sigmoid 后概率 [0,1]
         tile_label = batch["tile_label"]              # (B, G, G) GT 连续软标签 [0,1]
         tile_ignore = batch["tile_ignore"]            # (B, G, G) bool 忽略标记
-        coverage_pred = outputs["coverage"]           # (B,) 模型预测覆盖率
-        coverage_gt = batch["coverage"].squeeze(-1)  # (B,) GT 覆盖率
 
         # 有效 tile mask：1=参与计算, 0=忽略(背景>50%)
         valid_mask = (~tile_ignore).float()
@@ -131,46 +111,13 @@ class TotalLoss:
             fp_penalty = torch.tensor(0.0, device=tile_prob.device)
 
         # ================================================================
-        # 5. Coverage MSE — 全局覆盖率监督
-        #    coverage = mean(tile_prob), 直接与 GT 覆盖率比较
-        #    小权重 (0.1) 即可纠正系统性偏高/偏低
-        # ================================================================
-        if self.coverage_weight > 0:
-            cov_loss = F.mse_loss(coverage_pred, coverage_gt)
-        else:
-            cov_loss = torch.tensor(0.0, device=tile_prob.device)
-
-        # ================================================================
-        # 6. TV (Total Variation) Smooth — 空间平滑
-        #    水平方向: |tile[i,j] - tile[i,j+1]| 的均值
-        #    垂直方向: |tile[i,j] - tile[i+1,j]| 的均值
-        #    仅计算相邻 tile 都有效的情况
-        # ================================================================
-        if self.smooth_weight > 0:
-            # 水平相邻差异
-            tv_h = torch.abs(tile_prob[:, :, 1:] - tile_prob[:, :, :-1])
-            valid_h = valid_mask[:, :, 1:] * valid_mask[:, :, :-1]  # 两边都有效
-            tv_h = (tv_h * valid_h).sum() / valid_h.sum().clamp(min=1)
-            # 垂直相邻差异
-            tv_v = torch.abs(tile_prob[:, 1:, :] - tile_prob[:, :-1, :])
-            valid_v = valid_mask[:, 1:, :] * valid_mask[:, :-1, :]
-            tv_v = (tv_v * valid_v).sum() / valid_v.sum().clamp(min=1)
-            tv_loss = tv_h + tv_v
-        else:
-            tv_loss = torch.tensor(0.0, device=tile_prob.device)
-
-        # ================================================================
-        # 总损失 = 加权求和
+        # 总损失 = tile_loss + fp_penalty (coverage/smooth 已禁用)
         # ================================================================
         total = (self.tile_weight * tile_loss +
-                 self.coverage_weight * cov_loss +
-                 self.smooth_weight * tv_loss +
                  self.fp_penalty_weight * fp_penalty)
 
         # 返回总损失 + 各组件分开的数值（用于日志记录）
         return total, {
             "tile_loss": tile_loss.item(),
-            "coverage_loss": cov_loss.item(),
-            "smooth_loss": tv_loss.item(),
             "total_loss": total.item(),
         }

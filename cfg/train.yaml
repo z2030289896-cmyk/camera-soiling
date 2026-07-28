@@ -19,10 +19,8 @@ use_amp: true
 loss:
   tile_weight: 1.0        # SmoothL1Loss tile 连续回归
   bce_weight: 0.3          # BCEWithLogitsLoss 防误识别
-  coverage_weight: 0.0     # 关闭
-  smooth_weight: 0.0       # 关闭
-  hard_neg_weight: 0.0     # 关闭
-  fp_penalty_weight: 0.0   # 关闭
+  hard_neg_weight: 0.0     # 可选，默认关闭
+  fp_penalty_weight: 0.0   # 可选，默认关闭
 
 # 日志 & 保存
 log_interval: 20

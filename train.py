@@ -238,10 +238,6 @@ def main():
     loss_fn = TotalLoss(
         tile_weight=loss_cfg.get("tile_weight", 1.0),
         bce_weight=loss_cfg.get("bce_weight", 0.3),
-        coverage_weight=loss_cfg.get("coverage_weight", 0.0),
-        smooth_weight=loss_cfg.get("smooth_weight", 0.0),
-        hard_neg_weight=loss_cfg.get("hard_neg_weight", 0.0),
-        fp_penalty_weight=loss_cfg.get("fp_penalty_weight", 0.0),
     )
 
     # === 优化器 + 学习率调度 ===
