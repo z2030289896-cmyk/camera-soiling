@@ -39,8 +39,10 @@ class CombinedDataset(Dataset):
             img_dir = Path(ds_cfg["image_dir"])
             mask_dir = Path(ds_cfg["mask_dir"])
             mask_type = ds_cfg["mask_type"]
-            for img_file in sorted(img_dir.glob("*.png")):
-                mask_file = mask_dir / img_file.name
+            for img_file in sorted(img_dir.rglob("*.png")):
+                # 保留相对于 img_dir 的子目录路径（D3/D3_0/xxx.png）
+                rel_path = img_file.relative_to(img_dir)
+                mask_file = mask_dir / rel_path
                 if mask_file.exists():
                     self.pairs.append((str(img_file), str(mask_file), mask_type))
 
@@ -66,6 +68,13 @@ class CombinedDataset(Dataset):
             is_red = (mask_rgb[:,:,0] > 200) & (mask_rgb[:,:,1] < 50) & (mask_rgb[:,:,2] < 50)
             binary_mask = is_red.astype(np.float32)  # 红→1
             ignore_mask = np.zeros(mask_rgb.shape[:2], dtype=bool)
+
+        elif mask_type == "white_black":
+            # RaindropsOnWindshield: 白(255,255,255)→异常, 黑(0,0,0)→背景
+            is_white = (mask_rgb[:,:,0] > 200) & (mask_rgb[:,:,1] > 200) & (mask_rgb[:,:,2] > 200)
+            is_black = (mask_rgb[:,:,0] == 0) & (mask_rgb[:,:,1] == 0) & (mask_rgb[:,:,2] == 0)
+            binary_mask = is_white.astype(np.float32)   # 白→异常=1
+            ignore_mask = is_black                      # 黑→忽略
 
         elif mask_type == "rgb_4color":
             # WoodScape rgbLabels: 4色语义分割
