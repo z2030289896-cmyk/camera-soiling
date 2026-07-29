@@ -181,22 +181,23 @@ python predict.py --eval --checkpoint outputs/experiments/xxx/best.pth
 
 ## 实验记录
 
-### 消融实验 (outputs/experiments/)
+### 实验记录（按时间排序）
 
-| 实验 | 说明 | 参数 | Best Val |
-|------|------|:---:|:---:|
-| A_SmoothL1+BCE | ResNet18 + gtLabels, 纯tile loss | 12M | 0.1409 |
-| A_SmoothL1+BCE_mobilenetv3 | MobileNetV3 + gtLabels, 纯tile loss | 0.6M | 0.1493 |
-| B_SmoothL1+BCE+TV | ResNet18 + gtLabels + TV平滑 | 12M | 0.1429 |
-| C_SmoothL1+BCE+Cov | ResNet18 + gtLabels + Coverage | 12M | 0.1458 |
-| RGBLabels_resnet18 | ResNet18 + rgbLabels | 12M | 0.1244 |
-| RGBLabels_mobilenetv3 | MobileNetV3 + rgbLabels | 0.6M | 0.1407 |
-| Raindrops_resnet18 | ResNet18 + RaindropsOnWindshield | 12M | 0.1407 |
-| Raindrops_mobilenetv3 | MobileNetV3 + RaindropsOnWindshield | 0.6M | 0.1668 |
-| Self_original | MobileNetV3, self/数据集微调(49张) | 0.6M | 0.1340 |
-| Self_made_from_original | MobileNetV3, self-made微调(212张) | 0.6M | 0.1678 |
-| **Combined_mobilenetv3** | **从零训练, self-made+WoodScape(5212张)** | **0.6M** | **0.1440** |
-| Self1_finetuned | Combined微调, self1数据集(53张) | 0.6M | 0.1676 |
+| # | 日期 | 实验 | 说明 | 参数 | Best Val |
+|:--:|------|------|------|:---:|:---:|
+| 1 | 7/6 | B_SmoothL1+BCE+TV | ResNet18 + gtLabels + TV平滑 | 12M | 0.1429 |
+| 2 | 7/6 | C_SmoothL1+BCE+Cov | ResNet18 + gtLabels + Coverage | 12M | 0.1458 |
+| 3 | 7/7 | A_SmoothL1+BCE_mobilenetv3 | MobileNetV3 + gtLabels | 0.6M | 0.1493 |
+| 4 | 7/9 | RGBLabels_resnet18 | ResNet18 + rgbLabels | 12M | 0.1244 |
+| 5 | 7/9 | RGBLabels_mobilenetv3 | MobileNetV3 + rgbLabels | 0.6M | 0.1407 |
+| 6 | 7/13 | Raindrops_resnet18 | ResNet18 + RaindropsOnWindshield | 12M | 0.1407 |
+| 7 | 7/13 | Raindrops_mobilenetv3 | MobileNetV3 + RaindropsOnWindshield | 0.6M | 0.1668 |
+| 8 | 7/22 | A_SmoothL1+BCE | ResNet18 + gtLabels | 12M | 0.1409 |
+| 9 | 7/22 | Self_original | MobileNetV3, self微调(49张) | 0.6M | 0.1340 |
+| 10 | 7/22 | Self_made_from_original | MobileNetV3, self-made微调(212张) | 0.6M | 0.1678 |
+| 11 | 7/23 | Self1_finetuned | Combined微调, self1(53张) | 0.6M | 0.1676 |
+| 12 | 7/24 | Combined_smooth0 | 从零训练, self-made+WoodScape, smooth=0 | 0.6M | — |
+| 13 | 7/24 | **Combined_mobilenetv3** | **从零训练, self-made+WoodScape, smooth=0.6** | **0.6M** | **0.1440** |
 
 ### 泛化性验证 (outputs/results/visual/)
 
