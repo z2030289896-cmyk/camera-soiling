@@ -1,28 +1,37 @@
-# 合并数据集配置：self-made(红黑) + woodscape rgbLabels(黑绿蓝红)
-# 统一二元标签: 脏污=1, 干净=0, 背景=ignore
+# ============================================================
+# 合并数据集配置: self-made(红黑) + WoodScape rgbLabels(4色)
+# ============================================================
+# 统一二元标签: 异常=1, 干净=0, 背景=ignore
 #
-# self-made:  红(255,0,0)→1, 黑(0,0,0)→0
-# woodscape:  绿(0,255,0)→0, 蓝(0,0,255)→1, 红(255,0,0)→1, 黑(0,0,0)→ignore
-#
-# 总数据量: 212 + 5000 = 5212 张
+# 子数据集mask格式:
+#   self-made:  红(255,0,0)→1, 黑(0,0,0)→0
+#   woodscape:  绿(0,255,0)→0, 蓝(0,0,255)→1, 红(255,0,0)→1, 黑(0,0,0)→ignore
+# 总数据量: 218 + 5000 = 5218 张
 
+# --- 子数据集列表 ---
 datasets:
-  - name: self-made
+  - name: self-made                    # 子集1: 红黑二值mask
     image_dir: "data/20260723/self-made/iamges"
     mask_dir: "data/20260723/self-made/mask"
-    mask_type: red_black       # 红=脏污, 黑=干净
-  - name: woodscape
+    mask_type: red_black               # 解析方式: 红→异常, 黑→干净
+  - name: woodscape                    # 子集2: RGB四色mask
     image_dir: "data/20260723/woodscape/rgbImages"
     mask_dir: "data/20260723/woodscape/rgbLabels"
-    mask_type: rgb_4color      # 绿=干净, 蓝/红=脏污, 黑=bg
+    mask_type: rgb_4color              # 解析方式: 绿→干净, 蓝/红→异常, 黑→忽略
 
+# --- 实验归档名 ---
 experiment: "Combined_mobilenetv3"
 
-img_size: 224
-smooth_sigma: 0.6         # tile标签边界平滑 (默认0.6)
-grid_size: 8
-tile_threshold: 0.1
-train_split: 0.8
-num_workers: 4
-batch_size: 32
-seed: 42
+# --- 图像预处理 ---
+img_size: 224              # 输入尺寸: 所有图片resize到 224×224
+
+# --- Tile标签生成 ---
+smooth_sigma: 0            # 边界平滑度: 0=不平滑(最优), 0.3=轻度, 0.6=默认
+grid_size: 8               # 网格大小: 划分为 8×8=64 个tile
+tile_threshold: 0.1        # 二值化阈值: 仅 binary=True 时使用
+
+# --- 训练/验证划分 ---
+train_split: 0.8           # 训练集比例: 80%训练, 20%验证
+batch_size: 32             # 每批加载图片数
+num_workers: 4             # 数据加载线程数
+seed: 42                   # 随机种子: 保证划分可复现
