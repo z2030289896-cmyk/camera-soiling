@@ -1,16 +1,23 @@
+# ============================================================
 # RaindropsOnWindshield 数据集配置
+# ============================================================
 # 二值 mask: 白色(255,255,255)=雨滴/脏污, 黑色(0,0,0)=背景
-# D3/D4 场景为空，自动跳过
 
-train_image: "data/RaindropsOnWindshield/images"
-train_mask: "data/RaindropsOnWindshield/masks"
-val_image: "data/RaindropsOnWindshield/images"
-val_mask: "data/RaindropsOnWindshield/masks"
+# --- 数据路径 ---
+train_image: "data/RaindropsOnWindshield/images"   # 训练图片目录
+train_mask: "data/RaindropsOnWindshield/masks"     # 训练mask目录 (二值PNG)
+val_image: "data/RaindropsOnWindshield/images"     # 验证图片目录 (同源)
+val_mask: "data/RaindropsOnWindshield/masks"       # 验证mask目录
 
-img_size: 224
-grid_size: 8
-tile_threshold: 0.1
-train_split: 0.8
-num_workers: 4
-batch_size: 32
-seed: 42
+# --- 图像预处理 ---
+img_size: 224             # 输入尺寸: 所有图片resize到 224×224
+
+# --- Tile标签生成 ---
+grid_size: 8              # 网格大小: 划分为 8×8=64 个tile
+tile_threshold: 0.1       # 二值化阈值: 仅 binary=True 时使用 (当前用连续标签)
+
+# --- 训练/验证划分 ---
+train_split: 0.8          # 训练集比例: 80%训练, 20%验证
+batch_size: 32             # 每批加载图片数
+num_workers: 4             # 数据加载线程数 (加速IO)
+seed: 42                   # 随机种子: 保证train/val划分可复现
