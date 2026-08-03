@@ -1,13 +1,12 @@
 # ============================================================
-# 合并数据集配置: self-made + WoodScape + RaindropsOnWindshield
+# 合并数据集配置: self-made + WoodScape (Combined_smooth0 实验)
 # ============================================================
 # 统一二元标签: 异常=1, 干净=0, 背景=ignore
 #
 # 子数据集mask格式:
 #   self-made:              红(255,0,0)→1, 黑(0,0,0)→0
-#   woodscape rgbLabels:    绿(0,255,0)→0, 蓝/红→1, 黑(0,0,0)→ignore
-#   RaindropsOnWindshield:  白(255,255,255)→1, 黑(0,0,0)→ignore
-# 总数据量: 218 + 5000 + 8190 = 13408 张
+#   woodscape rgbLabels:    绿(0,255,0)→忽略, 蓝/红→1, 黑(0,0,0)→0
+# 总数据量: 218 + 5000 = 5218 张
 
 # --- 子数据集列表 ---
 datasets:
@@ -18,14 +17,13 @@ datasets:
   - name: woodscape                    # 子集2: RGB四色mask
     image_dir: "data/20260729/woodscape/rgbImages"
     mask_dir: "data/20260729/woodscape/rgbLabels"
-    mask_type: rgb_4color              # 解析方式: 绿→干净, 蓝/红→异常, 黑→忽略
-  - name: raindrops                    # 子集3: 二值白黑mask
-    image_dir: "data/20260729/RaindropsOnWindshield/images"
-    mask_dir: "data/20260729/RaindropsOnWindshield/masks"
-    mask_type: white_black             # 解析方式: 白→异常, 黑→忽略
+    mask_type: rgb_4color              # 解析方式: 绿→忽略, 蓝/红→异常, 黑→干净
 
 # --- 实验归档名 ---
-experiment: "Combined_3datasets"
+experiment: "Combined_smooth0"
+
+# --- 损失函数 (SmoothL1 : BCE) ---
+bce_weight: 0.5                        # BCE 权重 (实验确认0.5最优)
 
 # --- 图像预处理 ---
 img_size: 224              # 输入尺寸: 所有图片resize到 224×224

@@ -85,6 +85,8 @@ def validate(model, dataloader, loss_fn, device, epoch, cfg, logger):
     """
     model.eval()  # 评估模式（关闭 Dropout/BatchNorm）
     running_loss = 0.0
+    running_rmse = 0.0  # 累加每个 batch 的 MSE，最后开方得 RMSE
+    n_batches = 0
     viz_samples = []  # [(image, tile_prob, coverage, gt_tile), ...]
 
     for batch_idx, batch in enumerate(dataloader):
@@ -95,6 +97,17 @@ def validate(model, dataloader, loss_fn, device, epoch, cfg, logger):
         outputs = model(images)
         _, loss_dict = loss_fn(outputs, batch)
         running_loss += loss_dict["total_loss"]
+
+        # 计算 Tile RMSE: sqrt(mean((pred - label)² over valid tiles))
+        tile_prob = outputs["tile_prob"]          # (B, 8, 8)
+        tile_label = batch["tile_label"]          # (B, 8, 8)
+        tile_ignore = batch["tile_ignore"]        # (B, 8, 8) bool
+        for b in range(images.shape[0]):
+            valid = ~tile_ignore[b]
+            if valid.sum() > 0:
+                mse = ((tile_prob[b][valid] - tile_label[b][valid]) ** 2).mean()
+                running_rmse += mse.item()
+                n_batches += 1
 
         # 从不同 batch 收集样本（确保覆盖不同脏污类型）
         if len(viz_samples) < 4 and batch_idx in [0, 10, 20, 30]:
@@ -107,7 +120,8 @@ def validate(model, dataloader, loss_fn, device, epoch, cfg, logger):
             ))
 
     avg = running_loss / len(dataloader)
-    logger.info(f"VAL   Epoch {epoch:3d} | Loss: {avg:.4f}")
+    val_rmse = (running_rmse / max(n_batches, 1)) ** 0.5  # RMSE = sqrt(mean(MSE))
+    logger.info(f"VAL   Epoch {epoch:3d} | Loss: {avg:.4f} | RMSE: {val_rmse:.4f}")
 
     # === 保存可视化对比图 ===
     if viz_samples:
@@ -127,7 +141,7 @@ def validate(model, dataloader, loss_fn, device, epoch, cfg, logger):
                               str(hd / f"{s}_compare_grid.png"))
         logger.info(f"  Saved {len(viz_samples)} viz samples to {hd}")
 
-    return avg
+    return avg, val_rmse
 
 
 def main():
@@ -135,6 +149,7 @@ def main():
     # === 命令行参数 ===
     parser = argparse.ArgumentParser(description="合并数据集从零训练")
     parser.add_argument("--epochs", type=int, default=50, help="训练轮数")
+    parser.add_argument("--bce_weight", type=float, default=None, help="BCE损失权重 (覆盖配置文件)")
     args = parser.parse_args()
 
     # === 加载配置 ===
@@ -160,7 +175,9 @@ def main():
     logger.info(f"Model params: {n_params:,} (训练方式: 从零训练)")
 
     # === 损失函数（消融实验最优配置：SmoothL1 + BCE）===
-    loss_fn = TotalLoss(tile_weight=1.0, bce_weight=0.3)
+    bce_weight = args.bce_weight if args.bce_weight is not None else cfg.get("bce_weight", 0.5)
+    logger.info(f"Loss config: SmoothL1=1.0, BCE={bce_weight}")
+    loss_fn = TotalLoss(tile_weight=1.0, bce_weight=bce_weight)
 
     # === 优化器 + 学习率调度 ===
     optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"],
@@ -177,7 +194,7 @@ def main():
     csv_path = log_dir / "training_log.csv"
     csv_file = open(csv_path, "a", newline="")
     csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(["epoch", "lr", "train_loss", "val_loss", "best_val_loss"])
+    csv_writer.writerow(["epoch", "lr", "train_loss", "val_loss", "val_rmse", "best_val_loss"])
 
     # === 训练循环 ===
     start_epoch, best_val_loss = 1, float("inf")
@@ -194,9 +211,10 @@ def main():
 
         # 验证 + 保存可视化
         if epoch % cfg.get("val_interval", 1) == 0:
-            val_loss = validate(model, val_loader, loss_fn, device, epoch, cfg, logger)
+            val_loss, val_rmse = validate(model, val_loader, loss_fn, device, epoch, cfg, logger)
             csv_writer.writerow([epoch, f"{lr:.6e}", f"{train_loss:.6f}",
-                                  f"{val_loss:.6f}", f"{best_val_loss:.6f}"])
+                                  f"{val_loss:.6f}", f"{val_rmse:.6f}",
+                                  f"{best_val_loss:.6f}"])
             csv_file.flush()
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
@@ -217,6 +235,7 @@ def main():
 
     # === 实验归档 ===
     exp_name = dataset_cfg.get("experiment", "Combined")
+    exp_name = f"{exp_name}_BCE{bce_weight}"  # 区分不同bce_weight的实验
     exp_dir = Path("outputs/experiments") / exp_name
     exp_dir.mkdir(parents=True, exist_ok=True)
     # 配置文件快照

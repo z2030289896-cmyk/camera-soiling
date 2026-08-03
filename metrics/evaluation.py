@@ -40,6 +40,8 @@ class Evaluator:
         self.all_tp = 0; self.all_tn = 0; self.all_fp = 0; self.all_fn = 0
         self.all_cov_errors = []
         self.all_tile_maes = []
+        self.all_tile_rmses = []       # Tile RMSE: sqrt(mean((pred-label)²))
+        self.all_cov_rmse_errors = []  # Coverage RMSE: sqrt(mean((pred-gt)²))
         self.per_image_results = []
         self.total_tiles = 0
         self.total_valid_tiles = 0
@@ -78,9 +80,12 @@ class Evaluator:
         self.total_valid_tiles += valid.sum()
         self.total_tiles += tile_pred.size
 
-        # Tile MAE
-        tile_mae = np.abs(tile_pred[valid] - tile_label[valid]).mean() if valid.sum() > 0 else 0
+        # Tile MAE + RMSE
+        tile_diff = np.abs(tile_pred[valid] - tile_label[valid]) if valid.sum() > 0 else np.array([0])
+        tile_mae = float(tile_diff.mean())
+        tile_rmse = float(np.sqrt(np.mean((tile_pred[valid] - tile_label[valid]) ** 2))) if valid.sum() > 0 else 0.0
         self.all_tile_maes.append(tile_mae)
+        self.all_tile_rmses.append(tile_rmse)
 
         # 连续性指标（非二值化）
         clean_mask = (tile_label < 0.05) & valid
@@ -95,6 +100,7 @@ class Evaluator:
         # Coverage error
         cov_error = abs(cov_pred - cov_gt)
         self.all_cov_errors.append(cov_error)
+        self.all_cov_rmse_errors.append((cov_pred - cov_gt) ** 2)  # 用于 RMSE
 
         # 每图指标
         acc = (tp + tn) / max(tp + fp + tn + fn, 1)
@@ -104,7 +110,8 @@ class Evaluator:
 
         self.per_image_results.append({
             "filename": filename,
-            "tile_mae": float(tile_mae),
+            "tile_mae": tile_mae,
+            "tile_rmse": tile_rmse,
             "cov_error": float(cov_error),
             "accuracy": float(acc), "precision": float(prec),
             "recall": float(rec), "f1": float(f1),
@@ -174,7 +181,9 @@ class Evaluator:
             "accuracy": float(acc), "precision": float(prec),
             "recall": float(rec), "f1": float(f1),
             "tile_mae": float(np.mean(self.all_tile_maes)),
+            "tile_rmse": float(np.sqrt(np.mean(self.all_tile_rmses))),
             "coverage_mae": float(np.mean(self.all_cov_errors)),
+            "coverage_rmse": float(np.sqrt(np.mean(self.all_cov_rmse_errors))),
             # 连续性指标（关键！不依赖 0.5 阈值）
             "clean_tile_pred_mean": float(clean_preds.mean()),
             "clean_tile_pred_median": float(np.median(clean_preds)),
@@ -215,7 +224,9 @@ class Evaluator:
             f"  干净/脏污区分度        : {m['separation_score']:.2f}  (越高越好，>2=良好)",
             f"  覆盖率偏差             : {m['coverage_bias']:+.4f}  (正=偏高/虚警多，负=偏低/漏检多)",
             f"  Tile MAE               : {m['tile_mae']:.4f}",
+            f"  Tile RMSE              : {m['tile_rmse']:.4f}  (对大误差更敏感)",
             f"  Coverage MAE           : {m['coverage_mae']:.4f}",
+            f"  Coverage RMSE          : {m['coverage_rmse']:.4f}",
             "=" * 55,
         ]
         print("\n".join(lines))
@@ -279,6 +290,7 @@ class Evaluator:
             with open(info_path, 'w') as f:
                 f.write(f"File: {r['filename']}\n")
                 f.write(f"Tile MAE: {r['tile_mae']:.4f}\n")
+                f.write(f"Tile RMSE: {r['tile_rmse']:.4f}\n")
                 f.write(f"Coverage Error: {r['cov_error']:.4f}\n")
                 f.write(f"Accuracy: {r['accuracy']:.4f}  Precision: {r['precision']:.4f}\n")
                 f.write(f"Recall: {r['recall']:.4f}  F1: {r['f1']:.4f}\n")
@@ -292,13 +304,14 @@ class Evaluator:
         with open(path, 'w', newline='') as f:
             writer = csv.writer(f)
             header = ["filename", "cov_pred", "cov_gt", "cov_error",
-                      "tile_mae", "accuracy", "precision", "recall", "f1",
+                      "tile_mae", "tile_rmse", "accuracy", "precision", "recall", "f1",
                       "tp", "fp", "tn", "fn"]
             writer.writerow(header)
             for r in self.per_image_results:
                 writer.writerow([
                     r['filename'], f"{r['cov_pred']:.6f}", f"{r['cov_gt']:.6f}",
                     f"{r['cov_error']:.6f}", f"{r['tile_mae']:.6f}",
+                    f"{r['tile_rmse']:.6f}",
                     f"{r['accuracy']:.6f}", f"{r['precision']:.6f}",
                     f"{r['recall']:.6f}", f"{r['f1']:.6f}",
                     r['tp'], r['fp'], r['tn'], r['fn'],

@@ -151,6 +151,8 @@ python predict.py --eval --checkpoint outputs/experiments/xxx/best.pth
 | 脏污区域漏检率(<0.5) | GT脏污tile中Pred<0.5的比例 | 0% |
 | 区分度 | (脏污均值-干净均值)/(两标准差和) | >2 |
 | Coverage偏差 | 预测coverage-GT coverage均值 | 0 |
+| **Tile RMSE** | sqrt(mean((pred-label)²)), 对大误差更敏感 | **0.00** |
+| **Coverage RMSE** | sqrt(mean((coverage_pred-coverage_gt)²)) | **0.00** |
 | F1-score | 2PR/(P+R), 阈值0.5 | 100% |
 
 ### 无GT统计 (`--stats`)
