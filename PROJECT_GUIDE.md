@@ -30,9 +30,10 @@
 | `__init__.py` | 包标记 |
 | `builder.py` | 工厂函数 `build_backbone(cfg)`，根据配置名创建 ResNet18 或 MobileNetV3 |
 | `resnet18.py` | ResNet18 Backbone：截断到 layer3，输出 (B,256,14,14)，12M 参数 |
+| `resnet.py` | ResNet18 内部实现（从 torchvision 移植）：BasicBlock/conv3x3 等组件，零 torchvision 依赖，state_dict 键名与 torchvision 完全兼容 |
 | `mobilenetv3.py` | MobileNetV3-Small Backbone：截断到 features[:9]，输出 (B,48,14,14)，0.6M 参数 |
 | `mobilenet.py` | MobileNetV3 内部实现（从 torchvision 移植）：InvertedResidual/SE/Conv2dNormActivation 等组件，零 torchvision 依赖，state_dict 键名与 torchvision 完全兼容 |
-| `weights/` | 预训练权重目录：mobilenet_v3_small-047dcff4.pth (ImageNet, 9.9MB)，本地加载无需联网 |
+| `weights/` | 预训练权重目录：resnet18-f37072fd.pth (45MB) + mobilenet_v3_small-047dcff4.pth (9.9MB)，本地加载无需联网 |
 
 ---
 

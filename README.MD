@@ -13,9 +13,10 @@ camera_soiling/
 │
 ├── backbones/              # 特征提取网络
 │   ├── resnet18.py         # ResNet18 layer3 (14×14×256, 12M params)
+│   ├── resnet.py           # ResNet18内部实现 (零torchvision依赖)
 │   ├── mobilenetv3.py      # MobileNetV3-Small (14×14×48, 0.6M params)
 │   ├── mobilenet.py        # MobileNetV3内部实现 (零torchvision依赖)
-│   └── weights/            # 预训练权重 (mobilenet_v3_small-047dcff4.pth)
+│   └── weights/            # 预训练权重 (resnet18 + mobilenet_v3_small)
 │
 ├── cfg/                    # 配置文件
 │   ├── dataset.yaml        # WoodScape gtLabels
