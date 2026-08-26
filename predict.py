@@ -136,7 +136,7 @@ def main():
         save_heatmap(tile_prob, str(output_dir / f"{stem}_heatmap.png"))
         save_overlay(image, tile_prob, str(output_dir / f"{stem}_overlay.png"))
         save_grid_overlay(image, tile_prob, str(output_dir / f"{stem}_grid.png"))
-        from torchvision.utils import save_image
+        from utils.pil_utils import save_image
         save_image(image, str(output_dir / f"{stem}_original.png"))
 
         # 保存 coverage + tile 数据到 CSV
@@ -162,7 +162,7 @@ def main():
             save_heatmap(tile, str(output_dir / f"{stem}_heatmap.png"))
             save_overlay(image, tile, str(output_dir / f"{stem}_overlay.png"))
             save_grid_overlay(image, tile, str(output_dir / f"{stem}_grid.png"))
-            from torchvision.utils import save_image
+            from utils.pil_utils import save_image
             save_image(image, str(output_dir / f"{stem}_original.png"))
 
             if len(results) % 50 == 0:

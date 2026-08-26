@@ -55,6 +55,13 @@ camera_soiling/
 ├── models/
 │   └── tiled_soilingnet.py # Backbone + TileHead, coverage=mean(tile_prob)
 │
+├── utils/                  # 工具函数
+│   ├── pil_utils.py        # PIL图像工具 (替代torchvision工具函数)
+│   ├── config.py           # YAML配置加载
+│   ├── checkpoint.py       # 模型保存/加载
+│   ├── logger.py           # 日志
+│   └── seed.py             # 随机种子
+│
 ├── train.py                # gtLabels 训练
 ├── train.py                # WoodScape gtLabels 训练
 ├── train_rgblabels.py      # WoodScape rgbLabels 训练

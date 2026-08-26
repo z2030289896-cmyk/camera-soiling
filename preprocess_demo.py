@@ -94,7 +94,7 @@ Image.fromarray((binary_mask * 255).astype(np.uint8)).save(
 # Step 3: Resize 224×224
 # ================================================================
 print("\n[Step 3] Resize 224×224...")
-from torchvision.transforms import functional as F
+from utils.pil_utils import functional as F
 
 image_pil = Image.fromarray(image_raw)
 # binary_mask 偏移: {0,1} → {1,2} (兼容 PIL uint8)

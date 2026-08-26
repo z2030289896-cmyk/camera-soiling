@@ -133,6 +133,7 @@
 | `checkpoint.py` | 模型/优化器/调度器保存和加载（支持断点续训） |
 | `logger.py` | 统一日志工具 |
 | `seed.py` | 固定随机种子（random/numpy/torch/cudnn） |
+| `pil_utils.py` | PIL 图像工具（替代 torchvision 工具函数）：save_image / resize / hflip / 亮度对比度 / to_tensor，零 torchvision 依赖 |
 
 ---
 

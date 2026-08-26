@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 from PIL import Image
-from torchvision.transforms import functional as F
+from utils.pil_utils import functional as F
 
 
 class TrainTransform:

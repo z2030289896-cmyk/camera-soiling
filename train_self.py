@@ -27,7 +27,7 @@ from utils.seed import set_seed
 
 
 def _save_image(tensor, path):
-    from torchvision.utils import save_image
+    from utils.pil_utils import save_image
     save_image(tensor, path)
 
 

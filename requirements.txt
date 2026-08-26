@@ -5,10 +5,12 @@
 
 # --- 核心依赖（必备）---
 torch>=2.0.0              # 深度学习框架（GPU/CPU训练）
-torchvision>=0.15.0        # 预训练模型权重、图像变换
 numpy>=1.24.0              # 数值计算
 Pillow>=9.0.0              # 图像加载/处理（PNG/JPG）
 PyYAML>=6.0                # 配置文件解析
+
+# 注: 无需 torchvision — 模型结构(backbones/resnet.py, mobilenet.py)
+#     和图像工具(utils/pil_utils.py) 均已内部实现
 
 # --- 可选依赖 ---
 onnx>=1.14.0               # ONNX模型导出（仅 export_onnx.py 需要）

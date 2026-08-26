@@ -32,7 +32,7 @@ from utils.seed import set_seed
 
 def _save_image(tensor, path):
     """将 (3, H, W) tensor 保存为 PNG 图片。"""
-    from torchvision.utils import save_image
+    from utils.pil_utils import save_image
     save_image(tensor, path)
 
 
