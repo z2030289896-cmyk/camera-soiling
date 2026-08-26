@@ -2,10 +2,14 @@
 
 专为边缘设备部署设计，参数量仅 ResNet18 的 1/20 (0.6M vs 12M)。
 截断到 features[:9] 以输出 14×14 空间分辨率，保证 tile 定位精度。
+
+实现: 使用内部移植的 mobilenet_v3_small_internal (backbones/mobilenetv3_internal.py)
+零 torchvision 依赖，预训练权重从本地 backbones/weights/ 加载。
 """
 
 import torch.nn as nn
-from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
+
+from .mobilenetv3_internal import mobilenet_v3_small_internal
 
 
 class MobileNetV3Backbone(nn.Module):
@@ -37,9 +41,8 @@ class MobileNetV3Backbone(nn.Module):
         """
         super().__init__()
 
-        # 从 torchvision 加载预训练的 MobileNetV3-Small
-        weights = MobileNet_V3_Small_Weights.DEFAULT if pretrained else None
-        model = mobilenet_v3_small(weights=weights)
+        # 内部实现构建完整 MobileNetV3-Small，预训练权重从本地加载
+        model = mobilenet_v3_small_internal(pretrained=pretrained)
 
         # 截取前 9 层：输出 (B, 48, 14, 14)
         # features[9:] 是 7×7 低分辨率层，对 tile 定位帮助不大
