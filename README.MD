@@ -14,7 +14,7 @@ camera_soiling/
 ├── backbones/              # 特征提取网络
 │   ├── resnet18.py         # ResNet18 layer3 (14×14×256, 12M params)
 │   ├── mobilenetv3.py      # MobileNetV3-Small (14×14×48, 0.6M params)
-│   ├── mobilenetv3_internal.py  # MobileNetV3内部实现 (零torchvision依赖)
+│   ├── mobilenet.py        # MobileNetV3内部实现 (零torchvision依赖)
 │   └── weights/            # 预训练权重 (mobilenet_v3_small-047dcff4.pth)
 │
 ├── cfg/                    # 配置文件
