@@ -9,7 +9,7 @@ grid_size: 8               # tile 网格大小 (8×8=64 tiles)
 # --- Backbone: ResNet18 (截断到 layer3) ---
 # 输入: (B, 3, 224, 224)
 backbone:
-  name: "resnet18"          # torchvision 模型名
+  name: "resnet18"          # backbone 名称 (内部实现)
   pretrained: true          # 加载 ImageNet 预训练权重
   out_channels: 256         # layer3 输出通道数
   out_spatial: [14, 14]     # 224÷16=14

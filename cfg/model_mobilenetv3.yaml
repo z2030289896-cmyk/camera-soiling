@@ -10,7 +10,7 @@ grid_size: 8
 # 输入: (B, 3, 224, 224)
 # IR = InvertedResidual, SE = Squeeze-and-Excitation
 backbone:
-  name: "mobilenetv3"       # torchvision 模型名
+  name: "mobilenetv3"       # backbone 名称 (内部实现)
   pretrained: true          # 加载 ImageNet 预训练权重
   out_channels: 48          # features[:9] = 48ch
   out_spatial: [14, 14]
