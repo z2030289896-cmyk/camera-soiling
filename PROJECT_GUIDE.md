@@ -10,7 +10,7 @@
 |------|:---:|------|
 | `.gitignore` | 13 | Git 忽略规则：排除 outputs/、data/、.pth 等大文件 |
 | `README.MD` | — | 项目说明文档 |
-| `requirements.txt` | 8 | Python 依赖：torch, torchvision, numpy, Pillow, PyYAML, onnx |
+| `requirements.txt` | 8 | Python 依赖：torch, numpy, Pillow, PyYAML（无需 torchvision） |
 | `__init__.py` | 0 | Python 包标记 |
 | `convert_labelme_to_mask.py` | 165 | LabelMe JSON 标注 → 多边形 mask 转换脚本 |
 | `export_onnx.py` | 96 | 将训练好的 .pth 模型导出为 ONNX 格式 |
