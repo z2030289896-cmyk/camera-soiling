@@ -72,7 +72,7 @@ def to_tensor(pic: Image.Image) -> torch.Tensor:
         (C, H, W) float32 tensor
     """
     arr = np.asarray(pic, dtype=np.uint8)
-    tensor = torch.from_numpy(arr).permute(2, 0, 1).float() / 255.0
+    tensor = torch.from_numpy(arr.copy()).permute(2, 0, 1).float() / 255.0
     return tensor
 
 
