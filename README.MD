@@ -116,7 +116,7 @@ Input (B,3,224,224) → Backbone → (B,C,14,14) → TileHead → tile_logits (B
 
 ```
 TotalLoss = 1.0 × SmoothL1Loss(tile_prob, label)   ← 连续回归
-          + 0.3 × BCEWithLogitsLoss(tile_logits, label) ← 防误检
+          + 0.5 × BCEWithLogitsLoss(tile_logits, label) ← 防误检
 ```
 
 消融实验确认此配置最优。权重在 `cfg/train.yaml` 可调。
